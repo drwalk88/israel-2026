@@ -115,7 +115,10 @@ h3[id*="on-the-bus"]::before{background:var(--bus)}
 .player .p-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:10px 14px;font-size:13.5px;border-bottom:1px solid var(--line)}
 .player .p-title{font-weight:600}
 .player .p-meta{color:var(--ink-3);white-space:nowrap}
-.player iframe{display:block;width:100%;height:84px;border:0;background:var(--surface-2)}
+.player .frame{height:128px;overflow:hidden;background:#2d2e30}
+.player .frame iframe{display:block;width:100%;height:206px;margin-top:-31px;border:0;background:#2d2e30}
+.player .p-head a{font-size:12.5px;white-space:nowrap;margin-left:10px}
+@media (max-width:640px){.player .frame{height:auto}.player .frame iframe{margin-top:0}}
 .player .p-note{padding:12px 14px;font-size:14px;color:var(--ink-2)}
 /* appendix table */
 .rt{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
@@ -4509,8 +4512,9 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-si
     var div=document.createElement("div"); div.className="player";
     var head='<div class="p-head"><span class="p-title">'+esc(r.label)+' · '+esc(r.title)+'</span><span class="p-meta">'+dur(r.seconds)+'</span></div>';
     if(r.driveId){
-      div.innerHTML=head+'<iframe loading="lazy" allow="autoplay" src="https://drive.google.com/file/d/'+encodeURIComponent(r.driveId)+'/preview" title="'+esc(r.label)+' audio"></iframe>'+
-        '<div class="p-note"><a href="https://drive.google.com/file/d/'+encodeURIComponent(r.driveId)+'/view" target="_blank" rel="noopener">Open in Google Drive</a></div>';
+      var dl='<a href="https://drive.google.com/file/d/'+encodeURIComponent(r.driveId)+'/view" target="_blank" rel="noopener">Open in Drive ↗</a>';
+      div.innerHTML=head.replace(/(<span class="p-meta">[^<]*)<\/span>/,'$1'+' · '+dl+'</span>')+
+        '<div class="frame"><iframe loading="lazy" allow="autoplay" src="https://drive.google.com/file/d/'+encodeURIComponent(r.driveId)+'/preview" title="'+esc(r.label)+' audio"></iframe></div>';
     } else if(FOLDER){
       div.innerHTML=head+'<div class="p-note">Find <strong>'+esc(r.file)+'</strong> in the <a href="'+esc(FOLDER)+'" target="_blank" rel="noopener">shared recordings folder</a>.</div>';
     } else {
