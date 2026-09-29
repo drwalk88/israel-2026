@@ -4526,9 +4526,13 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-si
         '<div class="rates" role="group" aria-label="Playback speed">'+[1,1.25,1.5,2].map(function(x){return '<button type="button" data-rate="'+x+'"'+(x===1?' aria-pressed="true"':'')+'>'+x+'×</button>';}).join('')+'</div></div>';
       var au=div.querySelector('audio');
       // If Drive refuses direct playback, fall back to Drive's own embedded player.
-      au.addEventListener('error',function(){
-        div.querySelector('.native').outerHTML='<div class="frame"><iframe allow="autoplay" src="https://drive.google.com/file/d/'+id+'/preview" title="'+esc(r.label)+' audio"></iframe></div>';
-      });
+      var fell=false, ok=false;
+      au.addEventListener('canplay',function(){ ok=true; });
+      function fallback(){ if(fell||ok) return; fell=true; au.pause(); au.removeAttribute('src');
+        var n=div.querySelector('.native'); if(n) n.outerHTML='<div class="frame"><iframe allow="autoplay" src="https://drive.google.com/file/d/'+id+'/preview" title="'+esc(r.label)+' audio"></iframe></div>';
+      }
+      au.addEventListener('error',fallback);
+      setTimeout(fallback,8000); // no audio after 8s: use Drive's player instead
       div.querySelector('.rates').addEventListener('click',function(e){
         var b=e.target.closest('button'); if(!b) return; au.playbackRate=+b.dataset.rate;
         this.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
