@@ -115,6 +115,13 @@ h3[id*="on-the-bus"]::before{background:var(--bus)}
 .player .p-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:10px 14px;font-size:13.5px;border-bottom:1px solid var(--line)}
 .player .p-title{font-weight:600}
 .player .p-meta{color:var(--ink-3);white-space:nowrap}
+.player .native{display:flex;align-items:center;gap:10px;padding:12px 14px;flex-wrap:wrap}
+.player audio{flex:1;min-width:240px;height:40px;color-scheme:light}
+:root[data-theme="dark"] .player audio{color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .player audio{color-scheme:dark}}
+.player .rates{display:flex;gap:4px}
+.player .rates button{height:28px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font:500 12px var(--sans);cursor:pointer}
+.player .rates button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
 .player .frame{height:128px;overflow:hidden;background:#2d2e30}
 .player .frame iframe{display:block;width:100%;height:206px;margin-top:-31px;border:0;background:#2d2e30}
 .player .p-head a{font-size:12.5px;white-space:nowrap;margin-left:10px}
@@ -4513,8 +4520,20 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-si
     var head='<div class="p-head"><span class="p-title">'+esc(r.label)+' · '+esc(r.title)+'</span><span class="p-meta">'+dur(r.seconds)+'</span></div>';
     if(r.driveId){
       var dl='<a href="https://drive.google.com/file/d/'+encodeURIComponent(r.driveId)+'/view" target="_blank" rel="noopener">Open in Drive ↗</a>';
+      var id=encodeURIComponent(r.driveId);
       div.innerHTML=head.replace(/(<span class="p-meta">[^<]*)<\/span>/,'$1'+' · '+dl+'</span>')+
-        '<div class="frame"><iframe loading="lazy" allow="autoplay" src="https://drive.google.com/file/d/'+encodeURIComponent(r.driveId)+'/preview" title="'+esc(r.label)+' audio"></iframe></div>';
+        '<div class="native"><audio controls preload="auto" src="https://drive.google.com/uc?export=download&amp;id='+id+'"></audio>'+
+        '<div class="rates" role="group" aria-label="Playback speed">'+[1,1.25,1.5,2].map(function(x){return '<button type="button" data-rate="'+x+'"'+(x===1?' aria-pressed="true"':'')+'>'+x+'×</button>';}).join('')+'</div></div>';
+      var au=div.querySelector('audio');
+      // If Drive refuses direct playback, fall back to Drive's own embedded player.
+      au.addEventListener('error',function(){
+        div.querySelector('.native').outerHTML='<div class="frame"><iframe allow="autoplay" src="https://drive.google.com/file/d/'+id+'/preview" title="'+esc(r.label)+' audio"></iframe></div>';
+      });
+      div.querySelector('.rates').addEventListener('click',function(e){
+        var b=e.target.closest('button'); if(!b) return; au.playbackRate=+b.dataset.rate;
+        this.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+      });
+      setTimeout(function(){ var p=au.play(); if(p&&p.catch) p.catch(function(){}); },0);
     } else if(FOLDER){
       div.innerHTML=head+'<div class="p-note">Find <strong>'+esc(r.file)+'</strong> in the <a href="'+esc(FOLDER)+'" target="_blank" rel="noopener">shared recordings folder</a>.</div>';
     } else {
